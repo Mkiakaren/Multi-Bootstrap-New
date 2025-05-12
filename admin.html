@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Calculator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-orange: #ff7700;
+            --dark-orange: #e56b00;
+            --light-orange: #ff9d4d;
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+        }
+
+        .calculator-container {
+            max-width: 450px;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        .calculator-header {
+            background-color: var(--primary-orange);
+            color: white;
+            padding: 1rem;
+        }
+
+        .calculator-body {
+            padding: 1.5rem;
+            background-color: #f8f9fa;
+        }
+
+        .btn-calculator {
+            padding: 1rem;
+            font-size: 1.25rem;
+            border-radius: 8px;
+            border: none;
+            width: 100%;
+            height: 100%;
+            transition: all 0.2s;
+        }
+
+        .btn-number {
+            background-color: white;
+            color: #333;
+        }
+
+        .btn-number:hover {
+            background-color: #f1f1f1;
+        }
+
+        .btn-operator {
+            background-color: var(--light-orange);
+            color: white;
+        }
+
+        .btn-operator:hover {
+            background-color: var(--primary-orange);
+        }
+
+        .btn-equal {
+            background-color: var(--primary-orange);
+            color: white;
+        }
+
+        .btn-equal:hover {
+            background-color: var(--dark-orange);
+        }
+
+        .btn-clear {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-backspace {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .history-box {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-top: 1.5rem;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .history-box .history-header {
+            color: var(--primary-orange);
+            font-weight: bold;
+            border-bottom: 2px solid var(--light-orange);
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .history-item {
+            padding: 0.25rem 0;
+            border-bottom: 1px solid #f1f1f1;
+        }
+
+        #display {
+            font-size: 1.5rem;
+            text-align: right;
+            padding: 0.75rem 1rem;
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .control-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body class="bg-light py-5">
+    <div class="container">
+        <div class="calculator-container">
+            <div class="calculator-header">
+                <h4 class="mb-0">Admin Calculator</h4>
+            </div>
+            <div class="calculator-body">
+                <div class="mb-3">
+                    <input placeholder="input" type="text" id="display" class="form-control form-control-lg" readonly />
+                </div>
+
+                <div class="control-buttons">
+                    <button type="button" class="btn-calculator btn-clear" onclick="clearDisplay()">C</button>
+                    <button type="button" class="btn-calculator btn-backspace" onclick="backspace()">⌫</button>
+                </div>
+
+                <div class="calculator-grid">
+                    <button type="button" class="btn-calculator btn-number" onclick="append('7')">7</button>
+                    <button type="button" class="btn-calculator btn-number" onclick="append('8')">8</button>
+                    <button type="button" class="btn-calculator btn-number" onclick="append('9')">9</button>
+                    <button type="button" class="btn-calculator btn-operator" onclick="append('/')">÷</button>
+
+                    <button type="button" class="btn-calculator btn-number" onclick="append('4')">4</button>
+                    <button type="button" class="btn-calculator btn-number" onclick="append('5')">5</button>
+                    <button type="button" class="btn-calculator btn-number" onclick="append('6')">6</button>
+                    <button type="button" class="btn-calculator btn-operator" onclick="append('*')">×</button>
+
+                    <button type="button" class="btn-calculator btn-number" onclick="append('1')">1</button>
+                    <button type="button" class="btn-calculator btn-number" onclick="append('2')">2</button>
+                    <button type="button" class="btn-calculator btn-number" onclick="append('3')">3</button>
+                    <button type="button" class="btn-calculator btn-operator" onclick="append('-')">−</button>
+
+                    <button type="button" class="btn-calculator btn-number" onclick="append('0')">0</button>
+                    <button type="button" class="btn-calculator btn-number" onclick="append('.')">.</button>
+                    <button type="button" class="btn-calculator btn-equal" onclick="calculate()">=</button>
+                    <button type="button" class="btn-calculator btn-operator" onclick="append('+')">+</button>
+                </div>
+
+                <div class="history-box">
+                    <div class="history-header">History</div>
+                    <div id="history" class="history-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const display = document.getElementById('display');
+        const historyDiv = document.getElementById('history');
+
+        // Variables to track calculator state
+        let isCalculationDone = false;
+        let errorState = false;
+
+        // Helper function to handle special cases in input
+        function validateInput(currentValue, newValue) {
+            // Handle cases where a calculation was just performed
+            if (isCalculationDone && !isOperator(newValue) && newValue !== '.') {
+                clearDisplay();
+                isCalculationDone = false;
+            }
+
+            // Reset error state
+            if (errorState) {
+                clearDisplay();
+                errorState = false;
+            }
+
+            // Handle leading zeros
+            if (currentValue === '0' && !isOperator(newValue) && newValue !== '.') {
+                return newValue;
+            }
+
+            // Handle decimal points
+            if (newValue === '.') {
+                // Find the last operator position
+                const operators = ['+', '-', '*', '/'];
+                let lastOperatorIndex = -1;
+
+                for (const op of operators) {
+                    const index = currentValue.lastIndexOf(op);
+                    if (index > lastOperatorIndex) {
+                        lastOperatorIndex = index;
+                    }
+                }
+
+                // Check if there's already a decimal point in the current number
+                const currentNumber = currentValue.substring(lastOperatorIndex + 1);
+                if (currentNumber.includes('.')) {
+                    return currentValue;
+                }
+
+                // If the input is empty or ends with an operator, add a leading zero
+                if (currentValue === '' || isOperator(currentValue[currentValue.length - 1])) {
+                    return currentValue + '0.';
+                }
+            }
+
+            // Handle operators
+            if (isOperator(newValue)) {
+                // Don't allow operator as the first character except minus
+                if (currentValue === '' && newValue !== '-') {
+                    return '';
+                }
+
+                // Don't allow multiple operators in a row
+                if (isOperator(currentValue[currentValue.length - 1])) {
+                    // Allow minus after other operators (for negative numbers)
+                    if (newValue === '-' &&
+                        currentValue[currentValue.length - 1] !== '-') {
+                        return currentValue + newValue;
+                    }
+                    return currentValue.slice(0, -1) + newValue;
+                }
+            }
+
+            return currentValue + newValue;
+        }
+
+        // Helper function to check if a character is an operator
+        function isOperator(char) {
+            return ['+', '-', '*', '/'].includes(char);
+        }
+
+        // Function to append a value to the display
+        function append(value) {
+            display.value = validateInput(display.value, value);
+        }
+
+        // Function to clear the display
+        function clearDisplay() {
+            display.value = '';
+            isCalculationDone = false;
+            errorState = false;
+        }
+
+        // Function to remove the last character
+        function backspace() {
+            if (errorState) {
+                clearDisplay();
+            } else {
+                display.value = display.value.slice(0, -1);
+            }
+        }
+
+        // Function to format the result for display
+        function formatResult(result) {
+            // Handle integers
+            if (Number.isInteger(result)) {
+                return result.toString();
+            }
+
+            // For floating point results, limit decimals to reasonable precision
+            const stringResult = result.toString();
+            if (stringResult.includes('e')) {
+                // Handle scientific notation
+                return result.toPrecision(10);
+            } else {
+                // Limit decimal places to 10 to avoid floating point errors
+                return parseFloat(result.toFixed(10)).toString();
+            }
+        }
+
+        // Function to calculate the result
+        function calculate() {
+            try {
+                if (display.value === '') return;
+
+                const expression = display.value;
+
+                // Special case handling
+                if (expression === '.') {
+                    display.value = '0';
+                    return;
+                }
+
+                // Special handling for expressions that end with operators
+                let modifiedExpression = expression;
+                if (isOperator(modifiedExpression[modifiedExpression.length - 1])) {
+                    modifiedExpression = modifiedExpression.slice(0, -1);
+                }
+
+                // Use Function instead of eval for better security
+                const result = new Function('return ' + modifiedExpression)();
+
+                if (!isFinite(result)) {
+                    throw new Error('Invalid calculation');
+                }
+
+                const formattedResult = formatResult(result);
+                addToHistory(expression + ' = ' + formattedResult);
+                display.value = formattedResult;
+                isCalculationDone = true;
+
+            } catch (error) {
+                display.value = 'Error';
+                errorState = true;
+            }
+        }
+
+        // Function to add an entry to the history
+        function addToHistory(entry) {
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            historyItem.textContent = entry;
+            historyDiv.prepend(historyItem);
+
+            // Limit to 5 entries
+            const historyItems = historyDiv.getElementsByClassName('history-item');
+            if (historyItems.length > 5) {
+                historyDiv.removeChild(historyItems[historyItems.length - 1]);
+            }
+        }
+
+        // Initialize with empty display
+        clearDisplay();
+
+        // Add keyboard support
+        document.addEventListener('keydown', function (event) {
+            const key = event.key;
+
+            // Number keys
+            if (/^[0-9]$/.test(key)) {
+                append(key);
+            }
+            // Operators
+            else if (['+', '-', '*', '/'].includes(key)) {
+                append(key);
+            }
+            // Decimal point
+            else if (key === '.') {
+                append('.');
+            }
+            // Enter key (calculate)
+            else if (key === 'Enter') {
+                calculate();
+            }
+            // Backspace
+            else if (key === 'Backspace') {
+                backspace();
+            }
+            // Escape key (clear)
+            else if (key === 'Escape') {
+                clearDisplay();
+            }
+        });
+    </script>
+</body>
+
+</html>

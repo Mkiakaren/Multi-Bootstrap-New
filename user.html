@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-orange: #ff7700;
+            --dark-orange: #e56b00;
+            --light-orange: #ff9d4d;
+        }
+
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .card {
+            border-radius: 12px;
+            border: none;
+        }
+
+        .card-header {
+            background-color: var(--primary-orange);
+            color: white;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 1rem;
+        }
+
+        .btn-submit {
+            background-color: var(--primary-orange);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            background-color: var(--dark-orange);
+        }
+
+        .btn-submit:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .form-control:focus {
+            border-color: var(--light-orange);
+            box-shadow: 0 0 0 0.25rem rgba(255, 119, 0, 0.25);
+        }
+
+        .form-label {
+            color: #555;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body class="d-flex justify-content-center align-items-center vh-100">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header">
+                        <h4 class="mb-0 text-center">User Panel</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <form id="userForm">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="name" placeholder="Enter your full name">
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" placeholder="Enter your email">
+                            </div>
+                            <div class="mb-3">
+                                <label for="message" class="form-label">Message</label>
+                                <textarea class="form-control" id="message" rows="4"
+                                    placeholder="Enter your message"></textarea>
+                            </div>
+                            <button type="button" class="btn-submit w-100" id="submitBtn">Submit</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
+        const messageInput = document.getElementById('message');
+        const submitBtn = document.getElementById('submitBtn');
+        const userForm = document.getElementById('userForm');
+
+        // add or remove invalid class
+        function toggleValidationStyle(input) {
+            if (!input.value.trim()) {
+                input.classList.add('is-invalid');
+            } else {
+                input.classList.remove('is-invalid');
+            }
+        }
+
+        // listen to input changes
+        [nameInput, emailInput, messageInput].forEach(input => {
+            input.addEventListener('input', () => {
+                toggleValidationStyle(input);
+                validateForm();
+            });
+        });
+
+        submitBtn.addEventListener('click', () => {
+            // recheck validation
+            toggleValidationStyle(nameInput);
+            toggleValidationStyle(emailInput);
+            toggleValidationStyle(messageInput);
+
+
+            const isValid = nameInput.value.trim() && emailInput.value.trim() && messageInput.value.trim();
+            if (isValid) {
+                alert('✅ Form submitted successfully!');
+            } else {
+                alert('❌ Fill all fields!');
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' && !submitBtn.disabled) {
+                event.preventDefault();
+                submitBtn.click();
+            }
+        });
+    </script>
+
+</body>
+
+</html>
